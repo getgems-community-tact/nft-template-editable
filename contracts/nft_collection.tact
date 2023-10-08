@@ -16,7 +16,7 @@ struct RoyaltyParams {
     destination: Address;
 }
 
-contract NftCollection with Deployable, Ownable {
+contract NftCollection with Deployable, OwnableTransferable {
 
     next_item_index: Int as uint32 = 0;
     owner: Address;
