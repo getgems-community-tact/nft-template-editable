@@ -41,6 +41,14 @@ message UpdateNftContent {
     new_content: Cell;
 }
 
+message UpdateCollectionContent { 
+    query_id: Int as uint64;
+    new_content: Cell;
+    numerator:  Int as uint16;
+    denominator: Int as uint16;
+    destination: Address;
+}
+
 message(0x8b771735) ReportStaticData{
     query_id: Int as uint64;
     index_id: Int as uint32;
