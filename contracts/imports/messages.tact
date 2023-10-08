@@ -22,6 +22,25 @@ message(0x2fcb26a2) GetStaticData {
     query_id: Int as uint64;
 }
 
+message TransferEditorship { 
+    query_id: Int as uint64;            
+    new_editor: Address; 
+    response_destination: Address;
+    forward_amount: Int as coins; 
+    forward_payload: Slice as remaining; 
+}
+
+message EditorshipAssigned{
+    query_id: Int as uint64;
+    prev_editor: Address;
+    forward_payload: Slice as remaining; 
+}
+
+message UpdateNftContent { 
+    query_id: Int as uint64;
+    new_content: Cell;
+}
+
 message(0x8b771735) ReportStaticData{
     query_id: Int as uint64;
     index_id: Int as uint32;
