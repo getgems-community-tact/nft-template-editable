@@ -1,4 +1,5 @@
 import "@stdlib/deploy";
+import "@stdlib/ownable";
 import "./imports/globals";
 import "./imports/messages";
 import "./nft_item";
@@ -6,7 +7,7 @@ import "./nft_item";
 struct CollectionData {
     next_item_index: Int as uint32;
     collection_content: Cell;
-    owner_address: Address;
+    owner: Address;
 }
 
 struct RoyaltyParams {
@@ -15,15 +16,15 @@ struct RoyaltyParams {
     destination: Address;
 }
 
-contract NftCollection with Deployable {
+contract NftCollection with Deployable, OwnableTransferable {
 
     next_item_index: Int as uint32 = 0;
-    owner_address: Address;
+    owner: Address;
     royalty_params: RoyaltyParams;                      
     collection_content: Cell;   
 
-    init(owner_address: Address, collection_content: Cell, royalty_params: RoyaltyParams){
-        self.owner_address = owner_address;
+    init(owner: Address, collection_content: Cell, royalty_params: RoyaltyParams){
+        self.owner = owner;
         self.collection_content = collection_content; 
         self.royalty_params = royalty_params;
     }
@@ -52,7 +53,7 @@ contract NftCollection with Deployable {
                 body: Transfer {
                     query_id: 0,
                     new_owner: sender,
-                    response_destination: self.owner_address,
+                    response_destination: self.owner,
                     custom_payload: emptyCell(),
                     forward_amount: 0,
                     forward_payload: emptySlice()
@@ -64,9 +65,8 @@ contract NftCollection with Deployable {
     }
 
     receive(msg: GetRoyaltyParams) {   
-        let ctx: Context = context(); // get sender Info
         send(SendParameters{
-            to: ctx.sender,
+            to: sender(),
             value: 0,
             mode: 64, 
             bounce: false,
@@ -74,9 +74,21 @@ contract NftCollection with Deployable {
                 query_id: msg.query_id,
                 numerator:  self.royalty_params.numerator,
                 denominator: self.royalty_params.denominator,
-                destination: self.owner_address
+                destination: self.owner
             }.toCell()
         });        
+    }
+
+    receive(msg: UpdateCollectionContent) {
+        // Only Owner of the this NFT Collection can update it.
+        self.requireOwner();
+
+        self.collection_content = msg.new_content;
+        self.royalty_params = RoyaltyParams{
+            numerator: msg.numerator,
+            denominator: msg.denominator,
+            destination: msg.destination
+        };
     }
 
     // ------------------ Get Function  ------------------ //
@@ -88,7 +100,7 @@ contract NftCollection with Deployable {
         return CollectionData{
             next_item_index: self.next_item_index, 
             collection_content: b.toCell(), 
-            owner_address: self.owner_address
+            owner: self.owner
         };
     }
 
@@ -98,7 +110,7 @@ contract NftCollection with Deployable {
     }
 
     get fun getNftItemInit(item_index: Int): StateInit {
-        return initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content);
+        return initOf NftItem(myAddress(), item_index, self.owner, self.collection_content, myAddress());
     }
     
     get fun get_nft_content(index: Int, individual_content: Cell): Cell { 
