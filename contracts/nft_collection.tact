@@ -110,7 +110,7 @@ contract NftCollection with Deployable, OwnableTransferable {
     }
 
     get fun getNftItemInit(item_index: Int): StateInit {
-        return initOf NftItem(myAddress(), item_index, self.owner, self.collection_content, myAddress());
+        return initOf NftItem(myAddress(), item_index, self.owner, self.collection_content, self.owner);
     }
     
     get fun get_nft_content(index: Int, individual_content: Cell): Cell { 
